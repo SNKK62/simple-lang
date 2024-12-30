@@ -1,0 +1,8 @@
+*
+!.gitignore
+!Makefile
+!*.mll
+!*.mly
+!ast.ml
+!print_ast.ml
+
