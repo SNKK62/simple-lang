@@ -1,6 +1,6 @@
 # Simple Language in OCaml
 
-This compiler written in OCaml-yacc, OCaml-lex and OCaml based on [this book](https://www.rs.tus.ac.jp/mune/ccp/).
+This compiler is written in OCaml-yacc, OCaml-lex and OCaml based on [this book](https://www.rs.tus.ac.jp/mune/ccp/).
 
 ### Frontend
 
