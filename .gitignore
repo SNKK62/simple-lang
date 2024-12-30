@@ -1,6 +1,7 @@
 *
 !.gitignore
 !Makefile
+!README.md
 !*.mll
 !*.mly
 !ast.ml
