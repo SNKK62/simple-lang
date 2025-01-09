@@ -5,5 +5,10 @@
 !*.mll
 !*.mly
 !ast.ml
+!semant.ml
+!table.ml
+!types.ml
+!emitter.ml
 !print_ast.ml
+!sim.ml
 
