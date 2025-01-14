@@ -10,6 +10,14 @@ This compiler is written in OCaml-yacc, OCaml-lex and OCaml based on [this book]
   - parser.mly
 - ast
   - ast.ml
+- Semantic Analyzer
+  - semant.ml
+  - table.ml
+  - types.ml
+- code generator
+  - emitter.ml
+- main
+  - sim.ml
 
 #### Features
 
@@ -19,10 +27,14 @@ This compiler is written in OCaml-yacc, OCaml-lex and OCaml based on [this book]
 
 ```sh
 make print_ast
+make simc
 ```
 
 #### How to run
 
 ```sh
 ./print_ast <...>.spl
+./simc <...>.spl
+
+./a.out
 ```

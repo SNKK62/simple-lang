@@ -21,12 +21,12 @@ let actual_ty ty =
        | _ -> t
    in travTy ty [ty]
 
-let check_int ty = if ty != INT then raise (TypeErr "type error 1")
+let check_int ty = if ty != INT then raise (TypeErr "type error 1 in check_int")
 
 let check_array ty = 
           match ty with
              ARRAY _ -> ()
-           | _ -> raise (TypeErr "type error 2")
+           | _ -> raise (TypeErr "type error 2 in check_array")
 
 exception SymErr of string
 let rec check_redecl decs tl vl = 
