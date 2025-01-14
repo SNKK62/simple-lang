@@ -4,6 +4,7 @@
 !README.md
 !*.mll
 !*.mly
+!*.spl
 !ast.ml
 !semant.ml
 !table.ml
