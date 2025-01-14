@@ -52,7 +52,7 @@ let rec trans_dec ast nest tenv env = match ast with
                  ^ code                  (* 本体コード *)
                  ^ epilogue              (* エピローグ *)
    (* 変数宣言の処理 *)
- | VarDec (t,s) -> ()
+ | VarDec (t,s,_) -> ()
    (* 型宣言の処理 *)
  | TypeDec (s,t) -> 
       let entry = tenv s in
@@ -119,16 +119,27 @@ and trans_stmt ast nest tenv env =
                             | _ -> raise (No_such_symbol s)) 
                   (* ブロックのコード：文を表すブロックは，関数定義を無視する．*)
                   | Block (dl, sl) -> 
-                       (* ブロック内宣言の処理 *)
-                       let (tenv',env',addr') = type_decs dl nest tenv env in
-                             List.iter (fun d -> trans_dec d nest tenv' env') dl;
-                             (* フレームの拡張 *)
-                             let ex_frame = sprintf "\tsubq $%d, %%rsp\n" ((-addr'+16)/16*16) in
-                                  (* 本体（文列）のコード生成 *)
-                                  let code = List.fold_left 
-                                       (fun code ast -> (code ^ trans_stmt ast nest tenv' env')) "" sl
-                                  (* 局所変数分のフレーム拡張の付加 *)
-                                  in ex_frame ^ code
+                        (* ブロック内宣言の処理 *)
+                        let (tenv',env',addr') = type_decs dl nest tenv env in
+                              List.iter (fun d -> trans_dec d nest tenv' env') dl;
+                              (* フレームの拡張 *)
+                              let ex_frame = sprintf "\tsubq $%d, %%rsp\n" ((-addr'+16)/16*16) in
+                                    let vars = List.map (fun da -> 
+                                          match da with
+                                                VarDec(t,v,Some(e)) -> Assign(Var(v), e)
+                                    ) (List.filter (
+                                          fun d -> 
+                                                match d with 
+                                                      VarDec(_,_,Some(_)) -> true
+                                                      | _ -> false
+                                    ) dl) in
+                                          let dc_code = List.fold_left 
+                                                (fun code ast -> (code ^ trans_stmt ast nest tenv' env')) "" vars in
+                                                (* 本体（文列）のコード生成 *)
+                                                      let code = List.fold_left 
+                                                        (fun code ast -> (code ^ trans_stmt ast nest tenv' env')) dc_code sl
+                                                      (* 局所変数分のフレーム拡張の付加 *)
+                                                            in ex_frame ^ code
                   (* elseなしif文のコード *)
                   | If (e,s,None) -> let (condCode,l) = trans_cond e nest env in
                                                   condCode

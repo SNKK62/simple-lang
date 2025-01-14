@@ -24,7 +24,7 @@ and exp =
 and dec =
   | FuncDec of id * ((typ * id) list) * typ * stmt
   | TypeDec of id * typ
-  | VarDec of typ * id
+  | VarDec of typ * id * (exp option)
   | SyntaxError
 
 and typ =

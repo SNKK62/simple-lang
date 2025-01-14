@@ -36,8 +36,10 @@ and ast_dec ast =
       sprintf "FuncDec(\"%s\",[%s],%s,%s)"
         s (List.fold_left (fun str (t, s) -> (semi str) ^ sprintf "(%s,\"%s\")" (ast_typ t) s) "" l)
         (ast_typ t) (ast_stmt b)
-  | VarDec (t, s) ->
-      sprintf "VarDec(%s,\"%s\")" (ast_typ t) s
+  | VarDec (t, s, e) ->
+      (match e with
+      | Some(ex) -> sprintf "VarDec(%s,\"%s\",%s)" (ast_typ t) s (ast_exp ex)
+      | None -> sprintf "VarDec(%s,\"%s\")" (ast_typ t) s)
   | TypeDec (s, t) ->
       sprintf "TypeDec (\"%s\",%s)" s (ast_typ t)
   | SyntaxError -> exit 1

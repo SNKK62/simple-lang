@@ -34,7 +34,7 @@ let rec check_redecl decs tl vl =
          [] -> ()
        | FuncDec (s,_,_,_)::rest -> if List.mem s vl then raise (SymErr s)
                                     else check_redecl rest tl (s::vl) 
-       | VarDec (_,s)::rest -> if List.mem s vl then raise (SymErr s)
+       | VarDec (_,s,_)::rest -> if List.mem s vl then raise (SymErr s)
                                else check_redecl rest tl (s::vl) 
        | TypeDec (s,_)::rest -> if List.mem s tl then raise (SymErr s)
                                 else check_redecl rest (s::tl) vl 
@@ -54,13 +54,14 @@ let rec type_dec ast (nest,addr) tenv env =
       (* 関数定義の処理 *)
       FuncDec (s, l, rlt, Block (dl,_)) -> 
          (* 関数名の記号表への登録 *)
-         check_redecl ((List.map (fun (t,s) -> VarDec (t,s)) l) @ dl) [] [];
+         (* TODO: check type of VarDec*)
+         check_redecl ((List.map (fun (t,s) -> VarDec (t,s,None)) l) @ dl) [] [];
          let env' = update s (FunEntry 
                                  {formals= 
                                     List.map (fun (typ,_) -> create_ty typ tenv) l; 
                                     result=create_ty rlt tenv; level=nest+1}) env in (tenv, env', addr)
     (* 変数宣言の処理 *)
-    | VarDec (t,s) -> (tenv, 
+    | VarDec (t,s,_) -> (tenv, 
               update s (VarEntry {ty= create_ty t tenv; offset=addr-8; level=nest}) env, addr-8)
     (* 型宣言の処理 *)
     | TypeDec (s,t) -> let tenv' = update s (NAME (s,ref None)) tenv in (tenv', env, addr)

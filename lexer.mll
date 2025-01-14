@@ -42,7 +42,7 @@ rule lexer = parse
   | ')'                     { RP }
   | ','                     { COMMA }
   | ';'                     { SEMI }
-  | [' ' '\t']         { lexer lexbuf } (* eat up whitespace *)
+  | [' ' '\t']              { lexer lexbuf } (* eat up whitespace *)
   | "//" [^'\n']* '\n'      { Lexing.new_line lexbuf; lexer lexbuf } (* eat up line comment *)
   | eof                     { raise End_of_file }
   | _ as c                  {
