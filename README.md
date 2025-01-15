@@ -23,7 +23,15 @@ This compiler is written in OCaml-yacc, OCaml-lex and OCaml based on [this book]
 
 - can prit error locations (with error recovery)
 
+#### Developing
+
+```sh
+dune build -w
+```
+
 #### How to build
+
+Run the following commands in `./bin`
 
 ```sh
 make print_ast
@@ -31,6 +39,8 @@ make simc
 ```
 
 #### How to run
+
+Run the following commands in `./bin`
 
 ```sh
 ./print_ast <...>.spl
