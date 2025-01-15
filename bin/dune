@@ -1,0 +1,5 @@
+(executable
+ (public_name simple_lang)
+ (name sim)
+ (libraries simple_lang)
+ (modules ("sim" parser lexer types table semant emitter ast print_ast)))
