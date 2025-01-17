@@ -35,6 +35,7 @@ rule lexer = parse
   | '*'                     { TIMES }
   | '/'                     { DIV }
   | '%'                     { MOD }
+  | '^'                     { POW }
   | '{'                     { LB }
   | '}'                     { RB }
   | '['                     { LS }

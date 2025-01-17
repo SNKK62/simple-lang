@@ -119,6 +119,8 @@ and type_exp ast env =
                (check_int (type_exp left env); check_int(type_exp right env); INT)
           | CallFunc ("/", [left; right]) -> 
                (check_int (type_exp left env); check_int(type_exp right env); INT)
+          | CallFunc ("^", [left; right]) -> 
+               (check_int (type_exp left env); check_int(type_exp right env); INT)
           | CallFunc ("!", [arg]) -> 
                (check_int (type_exp arg env); INT)
           | CallFunc (s, el) -> 

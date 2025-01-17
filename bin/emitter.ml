@@ -152,12 +152,12 @@ and trans_stmt ast nest tenv env =
                                                 ^ trans_stmt s1 nest tenv env
                                                 ^ sprintf "\tjmp L%d\n" l2
                                                 ^ sprintf "L%d:\n" l1
-                                                ^ trans_stmt s2 nest tenv env 
+                                                ^ trans_stmt s2 nest tenv env
                                                 ^ sprintf "L%d:\n" l2
                   (* while文のコード *)
                   | While (e,s) -> let (condCode, l1) = trans_cond e nest env in
                                      let l2 = incLabel() in
-                                         sprintf "L%d:\n" l2 
+                                         sprintf "L%d:\n" l2
                                        ^ condCode
                                        ^ trans_stmt s nest tenv env
                                        ^ sprintf "\tjmp L%d\n" l2
@@ -216,19 +216,38 @@ and trans_exp ast nest env = match ast with
                                            ^ "\tcqto\n"
                                            ^ "\tidivq %rbx\n"
                                            ^ "\tpushq %rax\n"
+                  (* ^のコード *)
+                  | CallFunc ("^", [left; right]) ->
+                              let loop_l = incLabel() in
+                                    let l = incLabel() in
+                                           trans_exp left nest env
+                                           ^ trans_exp right nest env
+                                           ^ "\tpopq %r9\n"
+                                           ^ "\tpopq %r8\n"
+                                           ^ "\tmovq $0, %rbx\n"
+                                           ^ "\tpushq $1\n"
+                                           ^ sprintf "L%d:\n" loop_l
+                                           ^ "\tcmpq %r9, %rbx\n"
+                                           ^ sprintf "\tjge L%d\n" l
+                                           ^ "\tpopq %rax\n"
+                                           ^ "\timulq %r8, %rax\n"
+                                           ^ "\tpushq %rax\n"
+                                           ^ "\taddq $1, %rbx\n"
+                                           ^ sprintf "\tjmp L%d\n" loop_l
+                                           ^ sprintf "L%d:\n" l
                   (* 反転のコード *)
-                  | CallFunc("!",  arg::_) -> 
+                  | CallFunc("!",  arg::_) ->
                                              trans_exp arg nest env
                                            ^ "\tnegq (%rsp)\n"
                   (* 関数呼出しのコード *)
-                  | CallFunc (s, el) -> 
+                  | CallFunc (s, el) ->
                                  trans_stmt (CallProc(s, el)) nest initTable env 
                                  (* 返戻値は%raxに入れて返す *)
                                ^ "\tpushq %rax\n"
                   | _ -> raise (Err "internal error")
 (* 関係演算の処理 *)
 and trans_cond ast nest env = match ast with
-                  | CallFunc (op, left::right::_) -> 
+                  | CallFunc (op, left::right::_) ->
                       (let code = 
                        (* オペランドのコード *)
                           trans_exp left nest env
@@ -236,7 +255,7 @@ and trans_cond ast nest env = match ast with
                        (* オペランドの値を %rax，%rbxへ *)
                         ^ "\tpopq %rax\n"
                         ^ "\tpopq %rbx\n"
-                       (* cmp命令 *)                       
+                       (* cmp命令 *)
                         ^ "\tcmpq %rax, %rbx\n" in
                           let l = incLabel () in
                              match op with

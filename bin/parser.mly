@@ -8,14 +8,15 @@
 %token <int> NUM
 %token <string> STR ID
 %token INT IF WHILE SPRINT IPRINT SCAN EQ NEQ GT LT GE LE ELSE RETURN NEW
-%token PLUS MINUS TIMES DIV MOD LB RB LS RS LP RP ASSIGN SEMI COMMA TYPE VOID
+%token PLUS MINUS TIMES DIV MOD POW LB RB LS RS LP RP ASSIGN SEMI COMMA TYPE VOID
 %type <Ast.stmt> prog
 
 
 %nonassoc GT LT EQ NEQ GE LE
 %left PLUS MINUS              /* lowest precedence */
-%left TIMES DIV REMAIN        /* medium precedence */
+%left TIMES DIV MOD           /* medium precedence */
 %nonassoc UMINUS              /* highest precedence */
+%right POW
 
 
 %start prog              /* the entry point */
@@ -125,7 +126,7 @@ expr : NUM                          { IntExp $1  }
      | expr MINUS expr              { CallFunc ("-", [$1; $3]) }
      | expr TIMES expr              { CallFunc ("*", [$1; $3]) }
      | expr DIV expr                { CallFunc ("/", [$1; $3]) }
-     | expr MOD expr             { CallFunc ("-", [
+     | expr MOD expr                { CallFunc ("-", [
                                           $1;
                                           CallFunc ("*", [
                                                 $3;
@@ -133,6 +134,7 @@ expr : NUM                          { IntExp $1  }
                                           ]);
                                       ]) 
                                     }
+     | expr POW expr                { CallFunc ("^", [$1; $3]) }
      | MINUS expr %prec UMINUS      { CallFunc("!", [$2]) }
      | LP expr RP                   { $2 }
      ;
