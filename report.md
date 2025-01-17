@@ -1,0 +1,137 @@
+# レポート
+
+## フロントエンド
+
+### 1
+
+- (lexer.mll) 以下のようにコメントを無視するようなルールを追加した．ただし，以降の課題で行数を取得する際に改行をカウントするために，行数をインクリメントしている．
+```ocaml
+  | "//" [^'\n']* '\n'      { Lexing.new_line lexbuf; lexer lexbuf }
+```
+
+
+
+## バックエンド
+
+### 1
+
+- (lexer.mll) 以下のように余りの式のルールを追加した．
+```ocaml
+  | '%'       { MOD }
+```
+
+- (parser.mly) 以下のように余りの式の文法を追加した．ASTを工夫して，余りの式を計算するようにした．
+```ocaml
+expr:
+  ...
+  | expr MOD expr   { CallFunc ("-", [
+                        $1;
+                        CallFunc ("*", [
+                            $3;
+                            CallFunc ("/", [$1; $3])
+                        ]);
+                      ]) 
+                    }
+  ...
+```
+
+### 2
+
+- (ast.ml) ASTに以下のようなoptionを持たせることで代入を可能にした．
+```ocaml
+and dec =
+  ...
+  | VarDec of typ * id * (exp option)
+  ...
+```
+
+- (emitter.ml) 以下では，ブロックの宣言を処理する際に代入が発生するもののみをフィルターし，それらをAssignノードに変換してからコード生成を行い，ブロック本体のコードと連結している．
+```ocaml
+| Block (dl, sl) -> 
+    (* ブロック内宣言の処理 *)
+    let (tenv',env',addr') = type_decs dl nest tenv env in
+        List.iter (fun d -> trans_dec d nest tenv' env') dl;
+            (* フレームの拡張 *)
+            let ex_frame = sprintf "\tsubq $%d, %%rsp\n" ((-addr'+16)/16*16) in
+                let vars = List.map (fun da -> 
+                    match da with
+                        VarDec(t,v,Some(e)) -> Assign(Var(v), e)
+                ) (List.filter (
+                    fun d -> 
+                        match d with 
+                            VarDec(_,_,Some(_)) -> true
+                            | _ -> false
+                ) dl) in
+                    let dc_code = List.fold_left 
+                        (fun code ast -> (code ^ trans_stmt ast nest tenv' env')) "" vars in
+                        (* 本体（文列）のコード生成 *)
+                        let code = List.fold_left 
+                            (fun code ast -> (code ^ trans_stmt ast nest tenv' env')) dc_code sl
+                            (* 局所変数分のフレーム拡張の付加 *)
+                                in ex_frame ^ code
+```
+
+- (parser.mly) 以下のようにdecに代入文の文法を追加した．
+```ocaml
+dec:
+  ...
+  | ty ID ASSIGN expr SEMI             { [VarDec ($1, $2, Some($4))] 
+  ...
+```
+
+- その他，ASTを処理するパターンマッチを修正した．
+
+### 3
+
+- (lexer.mll) 以下のように`^`比較演算子のルールを追加した．
+```ocaml
+| '^'                     { POW }
+```
+- (parser.mly) tokenに加えた上で以下のように`^`比較演算子の文法を追加した．
+```ocaml
+| expr POW expr                { CallFunc ("^", [$1; $3]) }
+```
+
+- (semant.ml) 以下のように`^`比較演算子の型チェックを追加した．
+```ocaml
+| CallFunc ("^", [left; right]) -> 
+     (check_int (type_exp left env); check_int(type_exp right env); INT)
+```
+
+- (semant.ml) 累乗は右結合するようにしている．
+```ocaml
+%right POW
+```
+
+- (emitter.ml) 以下のように`^`比較演算子のコード生成を追加した．
+  - 少し煩雑になってしまったが，指数の分だけ乗算を繰り返すことで累乗を計算している．
+  - ステップは以下の通りである．
+    - まずtrans_expで左辺と右辺の式を計算する．
+    - その後，左辺を%r8，右辺を%r9にpopする．
+      - 両辺をtrans_expしてからpopするのは，`(2 ^ 3) ^ 2`などの入れ子の計算でレジスタが上書きされるのを防ぐためであり，一回の累乗計算の中で他の翻訳が入らないようにしている．
+    - %rbx(ループの終了条件の比較用変数)に0を代入し，%rax(累乗計算の結果)に1をpushする．
+    - ループの開始地点を設定し，%rbxと%r9を比較してループを抜けるかどうかを判定する．
+    - ループ内では，%raxに%r8を掛けて%raxに代入し，%rbxに1を加算する．
+    - ループの開始地点へジャンプしてループを繰り返す．
+  - もう少し綺麗な実装がありそうだと思って考えたが，他の翻訳に依存せずにこのスコープ内で多少複雑になる分には他に影響はないと考えたためこの実装にした．
+
+```ocaml
+| CallFunc ("^", [left; right]) ->
+            let loop_l = incLabel() in
+                  let l = incLabel() in
+                         trans_exp left nest env
+                         ^ trans_exp right nest env
+                         ^ "\tpopq %r9\n"
+                         ^ "\tpopq %r8\n"
+                         ^ "\tmovq $0, %rbx\n"
+                         ^ "\tpushq $1\n"
+                         ^ sprintf "L%d:\n" loop_l
+                         ^ "\tcmpq %r9, %rbx\n"
+                         ^ sprintf "\tjge L%d\n" l
+                         ^ "\tpopq %rax\n"
+                         ^ "\timulq %r8, %rax\n"
+                         ^ "\tpushq %rax\n"
+                         ^ "\taddq $1, %rbx\n"
+                         ^ sprintf "\tjmp L%d\n" loop_l
+                         ^ sprintf "L%d:\n" l
+```
