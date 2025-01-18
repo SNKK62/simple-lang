@@ -243,14 +243,14 @@ and exp =
 ```ocaml
  | FOR LP ID ASSIGN expr FORRANGE expr RP stmt {
         Block (
-           [VarDec (IntTyp, $3, Some $5)],
-           [While (CallFunc ("<", [VarExp (Var $3);$7]),
-             Block ([],
-                    [$9; Assign (Var $3,
-                          CallFunc ("+", [VarExp (Var $3); IntExp 1]))
-                    ]
-             ))
-           ]
+              [VarDec (IntTyp, $3, Some $5)],
+              [While (
+                    CallFunc ("<", [VarExp (Var $3);$7]),
+                    Block ([],
+                          [$9; Assign (Var $3,
+                             CallFunc ("+", [VarExp (Var $3); IntExp 1]))
+                    ])
+              )]
         )
  }
 ```
