@@ -169,6 +169,19 @@ and exp =
                 Assign (Var $1, CallFunc ("+", [VarExp (Var $1); IntExp 1])),
                 CallFunc ("-", [VarExp (Var $1); IntExp 1])
           )}
+| ID LS expr RS INC { StmtExp (
+                        Assign (
+                            IndexedVar (Var $1, $3),
+                            CallFunc ("+", [
+                                VarExp (IndexedVar (Var $1, $3));
+                                IntExp 1
+                            ])
+                        ),
+                        CallFunc ("-", [
+                            VarExp (IndexedVar (Var $1, $3));
+                            IntExp 1
+                        ])
+                    )}
 ```
 
 - (semant.ml) 以下のように`StmtExp`の型チェックを追加した．

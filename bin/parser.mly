@@ -127,6 +127,10 @@ expr : NUM                          { IntExp $1  }
                                           Assign (Var $1, CallFunc ("+", [VarExp (Var $1); IntExp 1])),
                                           CallFunc ("-", [VarExp (Var $1); IntExp 1])
                                     )}
+     | ID LS expr RS INC            { StmtExp (
+                                          Assign (IndexedVar (Var $1, $3), CallFunc ("+", [VarExp (IndexedVar (Var $1, $3)); IntExp 1])),
+                                          CallFunc ("-", [VarExp (IndexedVar (Var $1, $3)); IntExp 1])
+                                    )}
      | expr MINUS expr              { CallFunc ("-", [$1; $3]) }
      | expr TIMES expr              { CallFunc ("*", [$1; $3]) }
      | expr DIV expr                { CallFunc ("/", [$1; $3]) }
