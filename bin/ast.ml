@@ -2,15 +2,13 @@
 
 type id = string
 
-type var =
-  | Var of id
-  | IndexedVar of var * exp
+type var = Var of id | IndexedVar of var * exp
 
 and stmt =
   | Assign of var * exp
-  | CallProc of id * (exp list)
-  | Block of (dec list) * (stmt list)
-  | If of exp * stmt * (stmt option)
+  | CallProc of id * exp list
+  | Block of dec list * stmt list
+  | If of exp * stmt * stmt option
   | While of exp * stmt
   | NilStmt
   | SyntaxError
@@ -19,17 +17,13 @@ and exp =
   | VarExp of var
   | StrExp of string
   | IntExp of int
-  | CallFunc of id * (exp list)
+  | CallFunc of id * exp list
   | StmtExp of stmt * exp
 
 and dec =
-  | FuncDec of id * ((typ * id) list) * typ * stmt
+  | FuncDec of id * (typ * id) list * typ * stmt
   | TypeDec of id * typ
-  | VarDec of typ * id * (exp option)
+  | VarDec of typ * id * exp option
   | SyntaxError
 
-and typ =
-  | NameTyp of string
-  | ArrayTyp of int * typ
-  | IntTyp
-  | VoidTyp
+and typ = NameTyp of string | ArrayTyp of int * typ | IntTyp | VoidTyp
