@@ -29,6 +29,15 @@ This compiler is written in OCaml-yacc, OCaml-lex and OCaml based on [this book]
 dune build -w
 ```
 
+#### Formatting
+```sh
+# for the first time
+echo "version = `ocamlformat --version`" > .ocamlformat
+
+# format
+opam exec -- dune fmt
+```
+
 #### How to build
 
 Run the following commands in `./bin`
