@@ -205,6 +205,13 @@ and exp =
 
 - (parser.mly) tokenに加えた上で以下のように`PASSIGN`のルールを追加した．
 ```ocaml
-| ID PASSIGN expr SEMI                     { Assign (Var $1, CallFunc ("+", [VarExp (Var $1); $3])) }
-| ID LS expr RS PASSIGN expr SEMI          { Assign (IndexedVar (Var $1, $3), CallFunc ("+", [VarExp (IndexedVar (Var $1, $3)); $6])) }
+| ID PASSIGN expr SEMI            { Assign (Var $1, CallFunc ("+", [VarExp (Var $1); $3])) }
+| ID LS expr RS PASSIGN expr SEMI { Assign (
+                                        IndexedVar (Var $1, $3),
+                                        CallFunc ("+", [
+                                            VarExp (IndexedVar (Var $1, $3));
+                                            $6
+                                        ])
+                                    )
+                                  }
 ```
