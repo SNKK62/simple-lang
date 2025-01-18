@@ -8,7 +8,7 @@
 %token <int> NUM
 %token <string> STR ID
 %token INT IF WHILE SPRINT IPRINT SCAN EQ NEQ GT LT GE LE ELSE RETURN NEW
-%token PLUS MINUS TIMES DIV MOD POW INC LB RB LS RS LP RP ASSIGN SEMI COMMA TYPE VOID
+%token PLUS MINUS TIMES DIV MOD POW INC LB RB LS RS LP RP ASSIGN PASSIGN SEMI COMMA TYPE VOID
 %type <Ast.stmt> prog
 
 
@@ -66,6 +66,8 @@ stmts: stmts stmt  { $1@[$2] }
 
 stmt : ID ASSIGN expr SEMI                      { Assign (Var $1, $3) }
      | ID LS expr RS ASSIGN expr SEMI           { Assign (IndexedVar (Var $1, $3), $6) }
+     | ID PASSIGN expr SEMI                     { Assign (Var $1, CallFunc ("+", [VarExp (Var $1); $3])) }
+     | ID LS expr RS PASSIGN expr SEMI          { Assign (IndexedVar (Var $1, $3), CallFunc ("+", [VarExp (IndexedVar (Var $1, $3)); $6])) }
      | IF LP cond RP stmt                       { If ($3, $5, None) }
      | IF LP cond RP stmt ELSE stmt             { If ($3, $5, Some $7) }
      | IF LP error RP                           {

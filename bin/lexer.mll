@@ -24,6 +24,7 @@ rule lexer = parse
   | id as text              { ID text }
   | '\"'[^'\"']*'\"' as str { STR str }
   | '='                     { ASSIGN }
+  | "+="                    { PASSIGN }
   | "=="                    { EQ }
   | "!="                    { NEQ }
   | '>'                     { GT }
