@@ -135,6 +135,7 @@ and type_exp ast env =
                                     else raise (TypeErr "type error 6")
                         else raise (TypeErr "type error 7")
                    | _ -> raise (No_such_symbol s))
+          | StmtExp (s, e) -> (type_stmt s env; type_exp e env)
           | _ -> raise (Err "internal error")
 and type_cond ast env =  
        match ast with

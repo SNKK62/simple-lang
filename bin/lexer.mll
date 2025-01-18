@@ -31,6 +31,7 @@ rule lexer = parse
   | ">="                    { GE }
   | "<="                    { LE }
   | '+'                     { PLUS }
+  | "++"                    { INC }
   | '-'                     { MINUS }
   | '*'                     { TIMES }
   | '/'                     { DIV }

@@ -20,6 +20,7 @@ and exp =
   | StrExp of string
   | IntExp of int
   | CallFunc of id * (exp list)
+  | StmtExp of stmt * exp
 
 and dec =
   | FuncDec of id * ((typ * id) list) * typ * stmt

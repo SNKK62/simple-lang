@@ -244,6 +244,9 @@ and trans_exp ast nest env = match ast with
                                  trans_stmt (CallProc(s, el)) nest initTable env 
                                  (* 返戻値は%raxに入れて返す *)
                                ^ "\tpushq %rax\n"
+                  | StmtExp (s, e) ->
+                                 trans_stmt s nest initTable env
+                               ^ trans_exp e nest env
                   | _ -> raise (Err "internal error")
 (* 関係演算の処理 *)
 and trans_cond ast nest env = match ast with
