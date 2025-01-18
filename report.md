@@ -215,3 +215,19 @@ and exp =
                                     )
                                   }
 ```
+
+
+### 6
+
+- (lexer.mll) 以下のように`do`を追加した．
+```ocaml
+  | "do"                    { DO }
+```
+
+- (parser.mly) tokenに加えた上で以下のように`do stmt while (cond)`のルールを追加した．
+  - 一度stmtを実行してから，while文を実行するようにしている．
+```ocaml
+| DO stmt WHILE LP cond RP SEMI { Block ([], [$2; While ($5, $2)]) }
+```
+
+

@@ -7,7 +7,7 @@
 /* File parser.mly */
 %token <int> NUM
 %token <string> STR ID
-%token INT IF WHILE SPRINT IPRINT SCAN EQ NEQ GT LT GE LE ELSE RETURN NEW
+%token INT IF WHILE DO SPRINT IPRINT SCAN EQ NEQ GT LT GE LE ELSE RETURN NEW
 %token PLUS MINUS TIMES DIV MOD POW INC LB RB LS RS LP RP ASSIGN PASSIGN SEMI COMMA TYPE VOID
 %type <Ast.stmt> prog
 
@@ -78,6 +78,7 @@ stmt : ID ASSIGN expr SEMI                      { Assign (Var $1, $3) }
             SyntaxError
      }
      | WHILE LP cond RP stmt                    { While ($3, $5) }
+     | DO stmt WHILE LP cond RP SEMI            { Block ([], [$2; While ($5, $2)]) }
      | WHILE LP error RP {
             let line, col = (Parsing.symbol_start_pos ()).Lexing.pos_lnum,
                                     (Parsing.symbol_start_pos ()).Lexing.pos_cnum -
