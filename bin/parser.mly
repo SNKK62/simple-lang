@@ -7,7 +7,7 @@
 /* File parser.mly */
 %token <int> NUM
 %token <string> STR ID
-%token INT IF WHILE DO SPRINT IPRINT SCAN EQ NEQ GT LT GE LE ELSE RETURN NEW
+%token INT IF WHILE DO FOR FORRANGE SPRINT IPRINT SCAN EQ NEQ GT LT GE LE ELSE RETURN NEW
 %token PLUS MINUS TIMES DIV MOD POW INC LB RB LS RS LP RP ASSIGN PASSIGN SEMI COMMA TYPE VOID
 %type <Ast.stmt> prog
 
@@ -85,6 +85,14 @@ stmt : ID ASSIGN expr SEMI                      { Assign (Var $1, $3) }
                                     (Parsing.symbol_start_pos ()).Lexing.pos_bol in
             printf "Syntax error: at line %d, col %d\n" line col;
             SyntaxError
+     }
+     | FOR LP ID ASSIGN expr FORRANGE expr RP stmt {
+            Block (
+               [VarDec (IntTyp, $3, Some $5)],
+               [While (CallFunc ("<", [VarExp (Var $3);$7]),
+                 Block ([],
+                   [$9; Assign (Var $3, CallFunc ("+", [VarExp (Var $3); IntExp 1]))
+            ]))])
      }
      | SPRINT LP STR RP SEMI                    { CallProc ("sprint", [StrExp $3]) }
      | IPRINT LP expr RP SEMI                   { CallProc ("iprint", [$3]) }

@@ -230,4 +230,24 @@ and exp =
 | DO stmt WHILE LP cond RP SEMI { Block ([], [$2; While ($5, $2)]) }
 ```
 
+### 7
+
+- (lexer.mll) 以下のように`for`と`..`を追加した．
+```ocaml
+  | "for"                   { FOR }
+  | ".."                    { FORRANGE}
+```
+
+- (parser.mly) tokenに加えた上で以下のように`for`文のルールを追加した．
+  - ASTでWhile文を使ってfor文を表現している．
+```ocaml
+| FOR LP ID ASSIGN expr FORRANGE expr RP stmt {
+       Block (
+          [VarDec (IntTyp, $3, Some $5)],
+          [While (CallFunc ("<", [VarExp (Var $3);$7]),
+            Block ([],
+              [$9; Assign (Var $3, CallFunc ("+", [VarExp (Var $3); IntExp 1]))
+       ]))])
+}
+```
 

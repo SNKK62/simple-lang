@@ -15,6 +15,8 @@ rule lexer = parse
   | "else"                  { ELSE }
   | "while"                 { WHILE }
   | "do"                    { DO }
+  | "for"                   { FOR }
+  | ".."                    { FORRANGE}
   | "scan"                  { SCAN }
   | "sprint"                { SPRINT }
   | "iprint"                { IPRINT }
