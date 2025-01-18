@@ -148,3 +148,38 @@ dec:
                          ^ sprintf "\tjmp L%d\n" loop_l
                          ^ sprintf "L%d:\n" l
 ```
+
+### 4
+
+- (lexer.mll) 以下のように`++`演算子のルールを追加した．
+```ocaml
+  | "++"                    { INC }
+```
+
+- (ast.ml) 以下のようにexpにStmtExpを追加した．
+```ocaml
+and exp =
+  ...
+  | StmtExp of stmt * exp
+```
+
+- (parser.mly) tokenに加えた上で以下のように`INC`のルールを追加した．
+```ocaml
+| ID INC  { StmtExp (
+                Assign (Var $1, CallFunc ("+", [VarExp (Var $1); IntExp 1])),
+                CallFunc ("-", [VarExp (Var $1); IntExp 1])
+          )}
+```
+
+- (semant.ml) 以下のように`StmtExp`の型チェックを追加した．
+```ocaml
+| StmtExp (s, e) -> (type_stmt s env; type_exp e env)
+```
+
+- (emitter.ml) 以下のように`StmtExp`のコード生成を追加した．
+```ocaml
+| StmtExp (s, e) ->
+               trans_stmt s nest initTable env
+             ^ trans_exp e nest env
+```
+
