@@ -91,8 +91,12 @@ stmt : ID ASSIGN expr SEMI                      { Assign (Var $1, $3) }
                [VarDec (IntTyp, $3, Some $5)],
                [While (CallFunc ("<", [VarExp (Var $3);$7]),
                  Block ([],
-                   [$9; Assign (Var $3, CallFunc ("+", [VarExp (Var $3); IntExp 1]))
-            ]))])
+                        [$9; Assign (Var $3,
+                              CallFunc ("+", [VarExp (Var $3); IntExp 1]))
+                        ]
+                 ))
+               ]
+            )
      }
      | SPRINT LP STR RP SEMI                    { CallProc ("sprint", [StrExp $3]) }
      | IPRINT LP expr RP SEMI                   { CallProc ("iprint", [$3]) }
