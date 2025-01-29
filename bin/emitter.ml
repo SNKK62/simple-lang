@@ -242,6 +242,11 @@ and trans_cond ast nest env =
       | ">=" -> (code ^ sprintf "\tjl L%d\n" l, l)
       | "<=" -> (code ^ sprintf "\tjg L%d\n" l, l)
       | _ -> ("", 0))
+  | StmtExp(s, e) -> (
+        let stmt_code = trans_stmt s nest initTable env in
+        let (cond_code, l) = trans_cond e nest env in
+        (stmt_code ^ cond_code, l)
+  )
   | _ -> raise (Err "internal error")
 
 (* プログラム全体の生成 *)

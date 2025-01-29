@@ -240,18 +240,32 @@ and exp =
 
 - (parser.mly) tokenに加えた上で以下のように`for`文のルールを追加した．
   - ASTでWhile文を使ってfor文を表現している．
+  - 初めは文の実行後にインクリメントしていたが，自作機能でbreak, continueを実装するために終了条件の比較前にインクリメントするように変更した．
 ```ocaml
  | FOR LP ID ASSIGN expr FORRANGE expr RP stmt {
         Block (
-              [VarDec (IntTyp, $3, Some $5)],
+              [VarDec (IntTyp, $3, Some (CallFunc ("-", [$5; IntExp 1])))],
               [While (
-                    CallFunc ("<", [VarExp (Var $3);$7]),
-                    Block ([],
-                          [$9; Assign (Var $3,
-                             CallFunc ("+", [VarExp (Var $3); IntExp 1]))
-                    ])
-              )]
+                    StmtExp (
+                          Assign (Var $3, CallFunc ("+", [VarExp (Var $3); IntExp 1])),
+                          CallFunc ("<", [VarExp (Var $3); $7])
+                    ), $9)
+              ]
         )
  }
+```
+
+- (semant.ml) 以下のように`type_cond`の型チェックに`StmtExp`のパターンまっちを追加した．
+```ocaml
+| StmtExp (s, e) -> type_stmt s env; type_cond e env
+```
+
+- (emitter.ml) 以下のように`trans_cond`に`StmtExp`のパターンマッチを追加した．
+```ocaml
+| StmtExp(s, e) -> (
+      let stmt_code = trans_stmt s nest initTable env in
+      let (cond_code, l) = trans_cond e nest env in
+      (stmt_code ^ cond_code, l)
+)
 ```
 
