@@ -17,6 +17,8 @@ rule lexer = parse
   | "do"                    { DO }
   | "for"                   { FOR }
   | ".."                    { FORRANGE}
+  | "break"                 { BREAK }
+  | "continue"              { CONTINUE }
   | "scan"                  { SCAN }
   | "sprint"                { SPRINT }
   | "iprint"                { IPRINT }

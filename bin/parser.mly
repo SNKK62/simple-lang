@@ -7,7 +7,7 @@
 /* File parser.mly */
 %token <int> NUM
 %token <string> STR ID
-%token INT IF WHILE DO FOR FORRANGE SPRINT IPRINT SCAN EQ NEQ GT LT GE LE ELSE RETURN NEW
+%token INT IF WHILE DO FOR FORRANGE SPRINT IPRINT SCAN EQ NEQ GT LT GE LE ELSE RETURN NEW BREAK CONTINUE
 %token PLUS MINUS TIMES DIV MOD POW INC LB RB LS RS LP RP ASSIGN PASSIGN SEMI COMMA TYPE VOID
 %type <Ast.stmt> prog
 
@@ -88,14 +88,13 @@ stmt : ID ASSIGN expr SEMI                      { Assign (Var $1, $3) }
      }
      | FOR LP ID ASSIGN expr FORRANGE expr RP stmt {
             Block (
-                  [VarDec (IntTyp, $3, Some $5)],
+                  [VarDec (IntTyp, $3, Some (CallFunc ("-", [$5; IntExp 1])))],
                   [While (
-                        CallFunc ("<", [VarExp (Var $3);$7]),
-                        Block ([],
-                              [$9; Assign (Var $3,
-                                 CallFunc ("+", [VarExp (Var $3); IntExp 1]))
-                        ])
-                  )]
+                        StmtExp (
+                              Assign (Var $3, CallFunc ("+", [VarExp (Var $3); IntExp 1])),
+                              CallFunc ("<", [VarExp (Var $3); $7])
+                        ), $9)
+                  ]
             )
      }
      | SPRINT LP STR RP SEMI                    { CallProc ("sprint", [StrExp $3]) }
@@ -105,6 +104,8 @@ stmt : ID ASSIGN expr SEMI                      { Assign (Var $1, $3) }
      | ID LP aargs_opt RP SEMI                  { CallProc ($1, $3) }
      | RETURN expr SEMI                         { CallProc ("return", [$2]) }
      | block                                    { $1 }
+     | BREAK SEMI                               { Break }
+     | CONTINUE SEMI                            { Continue }
      | SEMI                                     { NilStmt }
      | error SEMI                               {
             let line, col = (Parsing.symbol_start_pos ()).Lexing.pos_lnum,

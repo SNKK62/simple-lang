@@ -11,6 +11,8 @@ and stmt =
   | If of exp * stmt * stmt option
   | While of exp * stmt
   | NilStmt
+  | Break
+  | Continue
   | SyntaxError
 
 and exp =

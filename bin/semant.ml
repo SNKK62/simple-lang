@@ -190,5 +190,7 @@ and type_cond ast env =
   | CallFunc (_, [ left; right ]) ->
       check_int (type_exp left env);
       check_int (type_exp right env)
-  | StmtExp (s, e) -> type_stmt s env; type_cond e env
+  | StmtExp (s, e) ->
+      type_stmt s env;
+      type_cond e env
   | _ -> raise (Err "internal error")

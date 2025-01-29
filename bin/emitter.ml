@@ -49,7 +49,7 @@ let rec trans_dec ast nest tenv env =
       (* 仮引数の記号表への登録 *)
       let env' = type_param_dec l (nest + 1) tenv env in
       (* 関数本体（ブロック）の処理 *)
-      let code = trans_stmt block (nest + 1) tenv env' in
+      let code = trans_stmt block (nest + 1) None None tenv env' in
       (* 関数コードの合成 *)
       output :=
         !output ^ s ^ ":\n" (* 関数ラベル *) ^ prologue (* プロローグ *)
@@ -64,7 +64,7 @@ let rec trans_dec ast nest tenv env =
       | _ -> raise (Err s))
 
 (* 文の処理 *)
-and trans_stmt ast nest tenv env =
+and trans_stmt ast nest loop_start loop_end tenv env =
   type_stmt ast env;
   match ast with
   (* 代入のコード：代入先フレームをsetVarで求める．*)
@@ -126,13 +126,15 @@ and trans_stmt ast nest tenv env =
       in
       let dc_code =
         List.fold_left
-          (fun code ast -> code ^ trans_stmt ast nest tenv' env')
+          (fun code ast ->
+            code ^ trans_stmt ast nest loop_start loop_end tenv' env')
           "" vars
       in
       (* 本体（文列）のコード生成 *)
       let code =
         List.fold_left
-          (fun code ast -> code ^ trans_stmt ast nest tenv' env')
+          (fun code ast ->
+            code ^ trans_stmt ast nest loop_start loop_end tenv' env')
           dc_code sl
         (* 局所変数分のフレーム拡張の付加 *)
       in
@@ -140,24 +142,36 @@ and trans_stmt ast nest tenv env =
   (* elseなしif文のコード *)
   | If (e, s, None) ->
       let condCode, l = trans_cond e nest env in
-      condCode ^ trans_stmt s nest tenv env ^ sprintf "L%d:\n" l
+      condCode
+      ^ trans_stmt s nest loop_start loop_end tenv env
+      ^ sprintf "L%d:\n" l
   (* elseありif文のコード *)
   | If (e, s1, Some s2) ->
       let condCode, l1 = trans_cond e nest env in
       let l2 = incLabel () in
       condCode
-      ^ trans_stmt s1 nest tenv env
+      ^ trans_stmt s1 nest loop_start loop_end tenv env
       ^ sprintf "\tjmp L%d\n" l2 ^ sprintf "L%d:\n" l1
-      ^ trans_stmt s2 nest tenv env
+      ^ trans_stmt s2 nest loop_start loop_end tenv env
       ^ sprintf "L%d:\n" l2
   (* while文のコード *)
   | While (e, s) ->
-      let condCode, l1 = trans_cond e nest env in
-      let l2 = incLabel () in
-      sprintf "L%d:\n" l2 ^ condCode ^ trans_stmt s nest tenv env
-      ^ sprintf "\tjmp L%d\n" l2 ^ sprintf "L%d:\n" l1
+      let condCode, l_end = trans_cond e nest env in
+      let l_start = incLabel () in
+      sprintf "L%d:\n" l_start ^ condCode
+      ^ trans_stmt s nest (Some l_start) (Some l_end) tenv env
+      ^ sprintf "\tjmp L%d\n" l_start
+      ^ sprintf "L%d:\n" l_end
   (* 空文 *)
   | NilStmt -> ""
+  | Break -> (
+      match loop_end with
+      | Some l -> sprintf "\tjmp L%d\n" l
+      | None -> raise (Err "break out of loop"))
+  | Continue -> (
+      match loop_start with
+      | Some l -> sprintf "\tjmp L%d\n" l
+      | None -> raise (Err "continue out of loop"))
 
 (* 参照アドレスの処理 *)
 and trans_var ast nest env =
@@ -214,9 +228,14 @@ and trans_exp ast nest env =
   | CallFunc ("!", arg :: _) -> trans_exp arg nest env ^ "\tnegq (%rsp)\n"
   (* 関数呼出しのコード *)
   | CallFunc (s, el) ->
-      trans_stmt (CallProc (s, el)) nest initTable env (* 返戻値は%raxに入れて返す *)
+      (* TODO: loop_start, loop_endを渡す*)
+      trans_stmt
+        (CallProc (s, el))
+        nest None None initTable env (* 返戻値は%raxに入れて返す *)
       ^ "\tpushq %rax\n"
-  | StmtExp (s, e) -> trans_stmt s nest initTable env ^ trans_exp e nest env
+      (* TODO: loop_start, loop_endを渡す*)
+  | StmtExp (s, e) ->
+      trans_stmt s nest None None initTable env ^ trans_exp e nest env
   | _ -> raise (Err "internal error")
 
 (* 関係演算の処理 *)
@@ -242,14 +261,14 @@ and trans_cond ast nest env =
       | ">=" -> (code ^ sprintf "\tjl L%d\n" l, l)
       | "<=" -> (code ^ sprintf "\tjg L%d\n" l, l)
       | _ -> ("", 0))
-  | StmtExp(s, e) -> (
-        let stmt_code = trans_stmt s nest initTable env in
-        let (cond_code, l) = trans_cond e nest env in
-        (stmt_code ^ cond_code, l)
-  )
+  | StmtExp (s, e) ->
+      (* TODO: loop_start, loop_endを渡す*)
+      let stmt_code = trans_stmt s nest None None initTable env in
+      let cond_code, l = trans_cond e nest env in
+      (stmt_code ^ cond_code, l)
   | _ -> raise (Err "internal error")
 
 (* プログラム全体の生成 *)
 let trans_prog ast =
-  let code = trans_stmt ast 0 initTable initTable in
+  let code = trans_stmt ast 0 None None initTable initTable in
   io ^ header ^ code ^ epilogue ^ !output

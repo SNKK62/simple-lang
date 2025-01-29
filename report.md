@@ -269,3 +269,52 @@ and exp =
 )
 ```
 
+## 独自機能
+
+### `break`文と`continue`文の実装
+
+- (lexer.mll) 以下のように`break`と`continue`を追加した．
+```ocaml
+  | "break"                 { BREAK }
+  | "continue"              { CONTINUE }
+```
+- (parser.mly) tokenに加えた上で以下のように`break`文と`continue`文のルールを追加した．
+```ocaml
+| BREAK SEMI                { Break }
+| CONTINUE SEMI             { Continue }
+```
+
+- (ast.ml) 以下のように`Break`と`Continue`を追加した．
+```ocaml
+| Break
+| Continue
+```
+
+- (semant.ml) 以下のように`Break`と`Continue`のパターンマッチを追加した．
+```ocaml
+| Break -> ()
+| Continue -> ()
+```
+
+- (emitter.ml) 以下のように`trans_stmt`の引数に`break`と`continue`用のラベルを追加した．
+```ocaml
+and trans_stmt ast nest loop_start loop_end tenv env =
+```
+
+- (emitter.ml) 以下のように`while`文のコード生成に`break`と`continue`のラベルを更新している．
+```ocaml
+| While (e, s) ->
+    let condCode, l_end = trans_cond e nest env in
+    let l_start = incLabel () in
+    sprintf "L%d:\n" l_start ^ condCode ^ trans_stmt s nest (Some l_start) (Some l_end) tenv env
+    ^ sprintf "\tjmp L%d\n" l_start ^ sprintf "L%d:\n" l_end
+```
+- (emitter.ml) 以下のように`break`文と`continue`文のコード生成を追加した．
+```ocaml
+
+| Break -> 
+     (match loop_end with Some l -> sprintf "\tjmp L%d\n" l |None -> raise (Err "break out of loop"))
+| Continue -> 
+     (match loop_start with Some l -> sprintf "\tjmp L%d\n" l | None -> raise (Err "continue out of loop"))
+```
+
