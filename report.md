@@ -311,10 +311,13 @@ and trans_stmt ast nest loop_start loop_end tenv env =
 ```
 - (emitter.ml) 以下のように`break`文と`continue`文のコード生成を追加した．
 ```ocaml
-
-| Break -> 
-     (match loop_end with Some l -> sprintf "\tjmp L%d\n" l |None -> raise (Err "break out of loop"))
-| Continue -> 
-     (match loop_start with Some l -> sprintf "\tjmp L%d\n" l | None -> raise (Err "continue out of loop"))
+  | Break -> (
+      match loop_end with
+      | Some l -> sprintf "\tjmp L%d\n" l
+      | None -> raise (Err "break out of loop"))
+  | Continue -> (
+      match loop_start with
+      | Some l -> sprintf "\tjmp L%d\n" l
+      | None -> raise (Err "continue out of loop"))
 ```
 
