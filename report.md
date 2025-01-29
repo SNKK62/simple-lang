@@ -47,28 +47,35 @@ and dec =
 
 - (emitter.ml) 以下では，ブロックの宣言を処理する際に代入が発生するもののみをフィルターし，それらをAssignノードに変換してからコード生成を行い，ブロック本体のコードと連結している．
 ```ocaml
-| Block (dl, sl) -> 
+| Block (dl, sl) ->
     (* ブロック内宣言の処理 *)
-    let (tenv',env',addr') = type_decs dl nest tenv env in
-        List.iter (fun d -> trans_dec d nest tenv' env') dl;
-            (* フレームの拡張 *)
-            let ex_frame = sprintf "\tsubq $%d, %%rsp\n" ((-addr'+16)/16*16) in
-                let vars = List.map (fun da -> 
-                    match da with
-                        VarDec(t,v,Some(e)) -> Assign(Var(v), e)
-                ) (List.filter (
-                    fun d -> 
-                        match d with 
-                            VarDec(_,_,Some(_)) -> true
-                            | _ -> false
-                ) dl) in
-                    let dc_code = List.fold_left 
-                        (fun code ast -> (code ^ trans_stmt ast nest tenv' env')) "" vars in
-                        (* 本体（文列）のコード生成 *)
-                        let code = List.fold_left 
-                            (fun code ast -> (code ^ trans_stmt ast nest tenv' env')) dc_code sl
-                            (* 局所変数分のフレーム拡張の付加 *)
-                                in ex_frame ^ code
+    let tenv', env', addr' = type_decs dl nest tenv env in
+    List.iter (fun d -> trans_dec d nest tenv' env') dl;
+    (* フレームの拡張 *)
+    let ex_frame = sprintf "\tsubq $%d, %%rsp\n" ((-addr' + 16) / 16 * 16) in
+    let vars =
+      List.map
+        (fun da -> match da with VarDec (t, v, Some e) -> Assign (Var v, e))
+        (List.filter
+           (fun d ->
+             match d with VarDec (_, _, Some _) -> true | _ -> false)
+           dl)
+    in
+    let dc_code =
+      List.fold_left
+        (fun code ast ->
+          code ^ trans_stmt ast nest loop_start loop_end tenv' env')
+        "" vars
+    in
+    (* 本体（文列）のコード生成 *)
+    let code =
+      List.fold_left
+        (fun code ast ->
+          code ^ trans_stmt ast nest loop_start loop_end tenv' env')
+        dc_code sl
+      (* 局所変数分のフレーム拡張の付加 *)
+    in
+    ex_frame ^ code
 ```
 
 - (parser.mly) 以下のようにdecに代入文の文法を追加した．
