@@ -248,6 +248,7 @@ and exp =
 - (parser.mly) tokenに加えた上で以下のように`for`文のルールを追加した．
   - ASTでWhile文を使ってfor文を表現している．
   - 初めは文の実行後にインクリメントしていたが，自作機能でbreak, continueを実装するために終了条件の比較前にインクリメントするように変更した．
+    - これをやらないと，for文でcontinueを実行すると変数がインクリメントされずに無限ループに陥る．
 ```ocaml
  | FOR LP ID ASSIGN expr FORRANGE expr RP stmt {
         Block (
