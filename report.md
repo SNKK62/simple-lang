@@ -303,11 +303,13 @@ and trans_stmt ast nest loop_start loop_end tenv env =
 
 - (emitter.ml) 以下のように`while`文のコード生成に`break`と`continue`のラベルを更新している．
 ```ocaml
-| While (e, s) ->
-    let condCode, l_end = trans_cond e nest env in
-    let l_start = incLabel () in
-    sprintf "L%d:\n" l_start ^ condCode ^ trans_stmt s nest (Some l_start) (Some l_end) tenv env
-    ^ sprintf "\tjmp L%d\n" l_start ^ sprintf "L%d:\n" l_end
+  | While (e, s) ->
+      let condCode, l_end = trans_cond e nest env in
+      let l_start = incLabel () in
+      sprintf "L%d:\n" l_start ^ condCode
+      ^ trans_stmt s nest (Some l_start) (Some l_end) tenv env
+      ^ sprintf "\tjmp L%d\n" l_start
+      ^ sprintf "L%d:\n" l_end
 ```
 - (emitter.ml) 以下のように`break`文と`continue`文のコード生成を追加した．
 ```ocaml
