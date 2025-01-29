@@ -262,7 +262,7 @@ and exp =
  }
 ```
 
-- (semant.ml) 以下のように`type_cond`の型チェックに`StmtExp`のパターンまっちを追加した．
+- (semant.ml) 以下のように`type_cond`の型チェックに`StmtExp`のパターンマッチを追加した．
 ```ocaml
 | StmtExp (s, e) -> type_stmt s env; type_cond e env
 ```
