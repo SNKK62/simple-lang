@@ -1,0 +1,11 @@
+{
+    int a = 20;
+
+    a += 2;
+
+    sprint("a = ");
+    iprint(a);
+    sprint("\n");
+
+    return 0;
+}

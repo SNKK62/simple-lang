@@ -1,0 +1,19 @@
+{
+    int a = 7;
+
+    do {
+        sprint("a = ");
+        iprint(a);
+        sprint("\n");
+        a += 1;
+    } while (a < 11);
+
+    do {
+        sprint("a = ");
+        iprint(a);
+        sprint("\n");
+        a += 1;
+    } while (a < 11);
+
+    return 0;
+}

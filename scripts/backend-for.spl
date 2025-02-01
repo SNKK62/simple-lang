@@ -1,0 +1,9 @@
+{
+    for (i = 10..15) {
+        sprint("i = ");
+        iprint(i);
+        sprint("\n");
+    }
+
+    return 0;
+}

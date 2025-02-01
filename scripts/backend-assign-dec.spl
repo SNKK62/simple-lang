@@ -1,0 +1,15 @@
+{
+    int a = 20;
+    type ID = int;
+    ID b = 30;
+
+    sprint("int a = ");
+    iprint(a);
+    sprint("\n");
+
+    sprint("ID b = ");
+    iprint(b);
+    sprint("\n");
+
+    return 0;
+}

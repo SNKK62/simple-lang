@@ -1,0 +1,9 @@
+{
+  int k = 0;
+  k = 10;
+  // This is a comment.
+  iprint(k); // print 'k'
+  sprint("\n");
+
+  return 0;
+}

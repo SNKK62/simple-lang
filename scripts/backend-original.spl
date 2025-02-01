@@ -1,0 +1,31 @@
+{
+    int a = 10;
+    while (a < 15) {
+        if (a == 13)
+            break;
+        sprint("a = ");
+        iprint(a);
+        sprint("\n");
+        a += 1;
+
+        continue;
+
+        sprint("Hello World");
+        sprint("\n");
+    }
+
+    for (i =  10..15) {
+        if (i == 13)
+            break;
+        sprint("i = ");
+        iprint(i);
+        sprint("\n");
+
+        continue;
+
+        sprint("Hello World");
+        sprint("\n");
+    }
+
+    return 0;
+}

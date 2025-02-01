@@ -1,0 +1,16 @@
+{
+    int a, b;
+
+    a = 20;
+    b = a++;
+
+    sprint("a = ");
+    iprint(a);
+    sprint("\n");
+
+    sprint("b = ");
+    iprint(b);
+    sprint("\n");
+
+    return 0;
+}

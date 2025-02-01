@@ -1,0 +1,23 @@
+{
+    int a = 5^3;
+    int b = 6;
+    int c = 2;
+
+    sprint("a = ");
+    iprint(a);
+    sprint("\n");
+
+    sprint("b = ");
+    iprint(b);
+    sprint("\n");
+
+    sprint("c = ");
+    iprint(c);
+    sprint("\n");
+
+    sprint("b ^ (c + 1) = ");
+    iprint(b ^ (c + 1));
+    sprint("\n");
+
+    return 0;
+}

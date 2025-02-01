@@ -1,0 +1,26 @@
+{
+	int a, b, m, n r; // error occurs without comma
+
+	sprint ("You must give 2 integers.\n");
+	sprint ("First integer: ");
+	scan  (a);
+	sprint ("Second integer: ");
+	scan (b);
+	m = a; n = b;
+	r = m - (m / n) * n;
+	m = n;
+	n = r;
+	a < b; // error occurs with invalid operator
+	while (r > 0;) { // error occurs with excessive semicolon
+		r = m - (m / n) * n;
+		m = n;
+		n = r;
+		{} // error occurs with empty block
+	}
+	if (n = m) { // error occurs with invalid comparison
+		sprint("error");
+	}
+	sprint ("Answer = ");
+	iprint (m) // error occurs without semicolon at end of line
+	sprint ("\n");
+}
