@@ -3,4 +3,4 @@
  (name sim)
  (libraries simple_lang)
  (modules
-  ("sim" parser lexer types table semant emitter ast print_ast)))
+  ("sim" parser lexer types table syntax semant emitter ast print_ast)))

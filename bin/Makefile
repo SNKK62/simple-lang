@@ -10,11 +10,12 @@ simc: $(FILE)
 	ocamlc -c parser.ml
 	ocamlc -c types.ml
 	ocamlc -c table.ml
+	ocamlc -c syntax.ml
 	ocamlc -c semant.ml
 	ocamlc -c emitter.ml
 	ocamlc -c sim.ml
 	ocamlc -o simc unix.cma ast.cmo lexer.cmo parser.cmo \
-                  types.cmo table.cmo semant.cmo emitter.cmo sim.cmo
+                  types.cmo table.cmo semant.cmo emitter.cmo syntax.cmo sim.cmo
 
 print_ast: $(FILE) print_ast
 	ocamlyacc parser.mly

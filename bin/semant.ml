@@ -14,7 +14,7 @@ let rec calc_size ty =
 let actual_ty ty =
   let rec travTy t l =
     match t with
-    | NAME (s, tyref) -> (
+    | NAME (_, tyref) -> (
         match !tyref with
         | Some actty ->
             if List.mem actty l then raise (TypeErr "cyclic type definition")
@@ -42,6 +42,7 @@ let rec check_redecl decs tl vl =
       if List.mem s vl then raise (SymErr s) else check_redecl rest tl (s :: vl)
   | TypeDec (s, _) :: rest ->
       if List.mem s tl then raise (SymErr s) else check_redecl rest (s :: tl) vl
+  | DecSyntaxError _ :: _ -> ()
 
 (* 型式の生成 *)
 let rec create_ty ast tenv =
@@ -80,7 +81,7 @@ let rec type_dec ast (nest, addr) tenv env =
           env,
         addr - 8 )
   (* 型宣言の処理 *)
-  | TypeDec (s, t) ->
+  | TypeDec (s, _) ->
       let tenv' = update s (NAME (s, ref None)) tenv in
       (tenv', env, addr)
   | _ -> raise (Err "internal error")
@@ -127,6 +128,7 @@ and type_stmt ast env =
   | NilStmt -> ()
   | Break -> ()
   | Continue -> ()
+  | StmtSyntaxError _ -> ()
 
 and type_var ast env =
   match ast with
@@ -144,7 +146,7 @@ and type_var ast env =
 and type_exp ast env =
   match ast with
   | VarExp s -> type_var s env
-  | IntExp i -> INT
+  | IntExp _ -> INT
   | CallFunc ("+", [ left; right ]) ->
       check_int (type_exp left env);
       check_int (type_exp right env);

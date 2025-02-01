@@ -1,6 +1,7 @@
 (* The definition of the abstract syntax tree *)
 
 type id = string
+type syntax_error = SyntaxError of int * int * int * int
 
 type var = Var of id | IndexedVar of var * exp
 
@@ -13,7 +14,7 @@ and stmt =
   | NilStmt
   | Break
   | Continue
-  | SyntaxError
+  | StmtSyntaxError of syntax_error
 
 and exp =
   | VarExp of var
@@ -26,6 +27,6 @@ and dec =
   | FuncDec of id * (typ * id) list * typ * stmt
   | TypeDec of id * typ
   | VarDec of typ * id * exp option
-  | SyntaxError
+  | DecSyntaxError of syntax_error
 
 and typ = NameTyp of string | ArrayTyp of int * typ | IntTyp | VoidTyp

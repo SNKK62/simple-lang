@@ -54,14 +54,15 @@ let rec trans_dec ast nest tenv env =
       output :=
         !output ^ s ^ ":\n" (* 関数ラベル *) ^ prologue (* プロローグ *)
         ^ code (* 本体コード *) ^ epilogue
-      (* エピローグ *)
-      (* 変数宣言の処理 *)
-  | VarDec (t, s, _) -> () (* 型宣言の処理 *)
+  (* エピローグ *)
+  (* 変数宣言の処理 *)
+  | VarDec (_, _, _) -> () (* 型宣言の処理 *)
   | TypeDec (s, t) -> (
       let entry = tenv s in
       match entry with
       | NAME (_, ty_opt) -> ty_opt := Some (create_ty t tenv)
       | _ -> raise (Err s))
+  | _ -> raise (Err "internal error")
 
 (* 文の処理 *)
 and trans_stmt ast nest loop_start loop_end tenv env =
@@ -118,7 +119,10 @@ and trans_stmt ast nest loop_start loop_end tenv env =
       let ex_frame = sprintf "\tsubq $%d, %%rsp\n" ((-addr' + 16) / 16 * 16) in
       let vars =
         List.map
-          (fun da -> match da with VarDec (t, v, Some e) -> Assign (Var v, e))
+          (fun da ->
+            match da with
+            | VarDec (_, v, Some e) -> Assign (Var v, e)
+            | _ -> raise (Err "internal error"))
           (List.filter
              (fun d ->
                match d with VarDec (_, _, Some _) -> true | _ -> false)
@@ -172,6 +176,7 @@ and trans_stmt ast nest loop_start loop_end tenv env =
       match loop_start with
       | Some l -> sprintf "\tjmp L%d\n" l
       | None -> raise (Err "continue out of loop"))
+  | _ -> raise (Err "internal error")
 
 (* 参照アドレスの処理 *)
 and trans_var ast nest env =
