@@ -7,9 +7,141 @@
 - (lexer.mll) 以下のようにコメントを無視するようなルールを追加した．ただし，以降の課題で行数を取得する際に改行をカウントするために，行数をインクリメントしている．
 ```ocaml
   | "//" [^'\n']* '\n'      { Lexing.new_line lexbuf; lexer lexbuf }
+
+### 2
+
+- この課題のスコープではないが，エラー回復して複数のエラーを表示するようにした．
+  - また，要件が変わってしまうが，直後の字句ではなく行全体を表示したのち次行で`^`によってエラー箇所を示すようにした．
+- (parser.mly) 以下のようにsyntax errorの情報を付加する文法を追加した．
+```ocaml
+syntax_error : error {
+        let start_pos = Parsing.symbol_start_pos () in
+        let end_pos = Parsing.symbol_end_pos () in
+
+        let start_line = start_pos.Lexing.pos_lnum in
+        let start_col = start_pos.Lexing.pos_cnum - start_pos.Lexing.pos_bol in
+
+        let end_line = end_pos.Lexing.pos_lnum in
+        let end_col = end_pos.Lexing.pos_cnum - end_pos.Lexing.pos_bol in
+
+        SyntaxError (start_line, start_col, end_line, end_col)
+     }
+     ;
 ```
 
+- (parser.mly) 以下のように`dec`にsyntax errorを発生させる文法を追加した．
+```ocaml
+dec:
+   ...
+   | syntax_error SEMI                  { [DecSyntaxError($1)] }
+   ;
+```
 
+- (parser.mly) 以下のように`stmt`にsyntax errorを発生させる文法を追加した．
+```ocaml
+dec:
+   ...
+   | IF LP syntax_error RP                    { StmtSyntaxError ($3) }
+   | WHILE LP syntax_error RP                 { StmtSyntaxError($3) }
+   | syntax_error SEMI                        { StmtSyntaxError ($1) }
+   ;
+```
+
+- (parser.mly) 以下のように`block`にsyntax errorを発生させる文法を追加した．
+```ocaml
+block : LB decs stmts RB  { Block ($2, $3) }
+      | LB syntax_error RB { StmtSyntaxError($2) }
+      ;
+```
+
+- (ast.ml) 以下のようにSyntaxError関連のコードを追加した．
+```ocaml
+type syntax_error = SyntaxError of int * int * int * int
+...
+and stmt =
+  ...
+  | StmtSyntaxError of syntax_error
+...
+and dec =
+  ...
+  | DecSyntaxError of syntax_error
+```
+
+- (syntax.ml) 以下のようにsyntax errorを検知するためのファイルを追加した．
+  - `SyntaxError`があるかを再帰的に確認し，全て確認した後に一つでもあったなら`SyntaxErr`という例外を投げるようにした．
+  - `handle_syntax_error`は`SyntaxError`があった場合にその情報を表示する関数である．
+```ocaml
+open Ast
+
+exception SyntaxErr
+
+let rec replace_tabs s = String.map (fun c -> if c = '\t' then ' ' else c) s
+
+and handle_syntax_error e (lines : string list) =
+  (match e with
+  | SyntaxError (sl, sc, _, ec) ->
+      Printf.printf "Syntax error at line %d, column %d-%d\n%s\n%s\n" sl sc ec
+        (replace_tabs (List.nth lines (sl - 1)))
+        (String.make sc ' ' ^ String.make (ec - sc + 1) '^'));
+  true
+
+and check_prog ast (lines : string list) =
+  match check_stmt ast lines with true -> raise SyntaxErr | false -> ()
+
+and check_dec ast (lines : string list) =
+  match ast with
+  | FuncDec (_, _, _, s) -> check_stmt s lines
+  | DecSyntaxError e -> handle_syntax_error e lines
+  | _ -> false
+
+and check_stmt ast (lines : string list) =
+  match ast with
+  | Block (dl, st) ->
+      let dec_res = List.map (fun d -> check_dec d lines) dl in
+      let stmt_res = List.map (fun s -> check_stmt s lines) st in
+      List.exists (( = ) true) dec_res || List.exists (( = ) true) stmt_res
+  | If (_, s, es) -> (
+      check_stmt s lines
+      || match es with Some s -> check_stmt s lines | None -> false)
+  | While (_, s) -> check_stmt s lines
+  | StmtSyntaxError e -> handle_syntax_error e lines
+  | _ -> false
+```
+
+- (sim.ml) 以下のように入力をstringに変換してからlexbufに変換している．
+```ocaml
+let cin_lines =
+  let rec read_lines ic acc =
+    try
+      let line = input_line ic in
+      read_lines ic (line :: acc)
+    with End_of_file -> List.rev acc (* 入力順を維持 *)
+  in
+  let cin =
+    if Array.length Sys.argv > 1 then open_in Sys.argv.(1) else stdin
+  in
+  read_lines cin []
+in
+(* lexbufをstringから作成 *)
+let cin_str = String.concat "\n" cin_lines ^ "\n" in
+(* 行を結合して1つの文字列に *)
+let lexbuf = Lexing.from_string cin_str in
+```
+
+- (sim.ml) 以下のようにコード生成の前にsyntax errorを検知するようにした．
+```ocaml
+let ast = Parser.prog Lexer.lexer lexbuf in
+let _ = Syntax.check_prog ast cin_lines in
+let code = Emitter.trans_prog ast in
+```
+
+- (sim.ml) 以下のように`SyntaxErr`の例外をキャッチして正常に終了するようにした．
+```ocaml
+try main () with
+...
+| Syntax.SyntaxErr -> ()
+...
+```
 
 ## バックエンド
 
